@@ -1,14 +1,7 @@
 package ca.wollersheim.dennis.keypad;
 
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
-import org.eclipse.paho.client.mqttv3.MqttDefaultFilePersistence;
-import org.eclipse.paho.client.mqttv3.MqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttTopic;
 
+import ioio.lib.api.AnalogInput;
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
@@ -21,35 +14,114 @@ import android.util.Log;
  * connect to a IOIO and blink the LED. A notification will appear on the
  * notification bar, enabling the user to stop the service.
  */
-public class KeypadIOIOLooper extends BaseIOIOLooper implements MqttCallback {
-	private MediaPlayer mMediaPlayer;
+public class KeypadIOIOLooper extends BaseIOIOLooper {
 	Context parent;
-	MqttClient client;
-	MqttClientPersistence persist;
-
-	private DigitalOutput[] pin = new DigitalOutput[4];
-	private int[] ioioPinID = { 20, 22, 21, 23 };
-	//private int[] ioioPinID = { 23, 20, 21, 22 };
-	private long[] pinStopTime = new long[4];
+	private int[] temperaturePinID = {37,36,34,33 };
+	private double[] tempMult = {1.0, 1.0, 1.0, 1.0};
+	private int[] digitalOutputPinID = { 23, 22, 21, 20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
+	private DigitalOutput[] digitalOutputPin = new DigitalOutput[digitalOutputPinID.length];
+	private AnalogInput[] analogInputPin = new AnalogInput[temperaturePinID.length];
+	private int analogBufferSize = 1000;
+	private long[] pinStopTime = new long[digitalOutputPinID.length];
 	private int lockIndex = 0;
 	private boolean connected = false;
+	public Exception IOIOError;
 
-	public enum IOIOError {
-		NONE, DISCONNECTED, INVALIDPIN, NEVERCONNECTED
-	};
+//	public enum IOIOError {
+//		NONE, DISCONNECTED, INVALIDPIN, NEVERCONNECTED
+//	};
 
 	private final String LOG = "KeypadIOIOLooper";
 
 	public KeypadIOIOLooper(Context c) {
-		SetupMQTT_Reciever(c);
+		super();
 	}
 
-	public IOIOError setPin(int switchID, int seconds) {
+	@Override
+	protected void setup() throws ConnectionLostException {
+		Log.d(LOG, "IOIO Setup");
+		for (int i = 0; i < digitalOutputPin.length; i++) {
+//			pin[i] = ioio_.openDigitalOutput(ioioPinID[i],
+//					DigitalOutput.Spec.Mode.OPEN_DRAIN, true);
+			digitalOutputPin[i] = ioio_.openDigitalOutput(digitalOutputPinID[i], true);
+			pinStopTime[i] = 0;
+		}
+//		for (int i = 0; i < temperaturePinID.length; i++) {
+//			analogInputPin[i] = ioio_.openAnalogInput(temperaturePinID[i]);
+//			analogInputPin[i].setBuffer(analogBufferSize);
+//		}
+		connected = true;
+	}
+	public String readAllTemperature(int tempID) throws IOIOError {
+		StringBuffer rv = new StringBuffer();
+		if (tempID >= analogInputPin.length) 
+			throw new IOIOError("Invalid Temperature Sensor;  I only have " + (analogInputPin.length) + " sensors");		
+		try {
+			int avail=analogInputPin[tempID].available();
+			for (int i = 0; i<avail; i++)
+				rv.append(',').append(analogInputPin[tempID].getVoltage()*100.0);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new IOIOError("Read interrupted");
+		} catch (ConnectionLostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new IOIOError("Connection Lost");
+		}
+		
+		return rv.toString();
+	}
+	public double readAverageTemperature(int tempID) throws IOIOError {
+		double rv = 0;
+		if (tempID >= analogInputPin.length) 
+			throw new IOIOError("Invalid Temperature Sensor;  I only have " + (analogInputPin.length) + " sensors");		
+		if (analogInputPin[tempID] == null )
+			throw new IOIOError("Invalid Temperature Sensor; sensor not initialized");		
+		try {
+			analogInputPin[tempID] = ioio_.openAnalogInput(temperaturePinID[tempID]);
+			analogInputPin[tempID].setBuffer(analogBufferSize);
+			while( analogInputPin[tempID].available() < analogBufferSize) {
+					Thread.sleep(100);
+			}
+			int avail=analogInputPin[tempID].available();
+			for (int i = 0; i<avail; i++)
+				rv += analogInputPin[tempID].getVoltage();
+			rv = rv / avail *100.0 * tempMult[tempID];
+			analogInputPin[tempID].close();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new IOIOError("Read interrupted");
+		} catch (ConnectionLostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new IOIOError("Connection Lost");
+		}
+		
+		return rv;
+	}
+
+	private boolean isLockPin( int switchID ) {
+		return switchID==lockIndex;
+	}
+	public void unlockDoor() throws IOIOError {
+		Log.d(LOG, "Unlocking");
+		setPin(lockIndex, 8);
+	}
+
+	public void safeSetPin(int switchID, int seconds) throws IOIOError {
+		if (isLockPin(switchID)) 
+			throw new IOIOError("Invalid Pin");
+		setPin(switchID, seconds);
+	}
+	
+	private void setPin(int switchID, int seconds) throws IOIOError {
 		// sanity checking
-		if (!connected)
-			return IOIOError.NEVERCONNECTED;
-		if (switchID >= pinStopTime.length) {
-			return IOIOError.INVALIDPIN;
+		if (!connected || digitalOutputPin[0]==null)
+			throw new IOIOError("Never Connected");
+		if (switchID >= pinStopTime.length ) {
+			throw new IOIOError("Invalid Pin");
 		}
 		pinStopTime[switchID] = System.currentTimeMillis() + seconds * 1000;
 		try {
@@ -57,40 +129,36 @@ public class KeypadIOIOLooper extends BaseIOIOLooper implements MqttCallback {
 		} catch (ConnectionLostException e) {
 			// TODO Auto-generated catch block
 			// showToastFromBackground("lost connection");
-			return IOIOError.DISCONNECTED;
+			throw new IOIOError("Disconnected");
 		}
-		return IOIOError.NONE;
 	}
 
-	public void unlock() throws ConnectionLostException {
-		Log.d(LOG, "Unlocking");
-		pinStopTime[lockIndex] = System.currentTimeMillis() + 8 * 1000;
-		setPin(lockIndex);
-	}
-
+	
 	private void setPin(int switchID) throws ConnectionLostException {
-		pin[switchID].write(false);
+		digitalOutputPin[switchID].write(false);
 	}
 
 	private void unsetPin(int switchID) throws ConnectionLostException {
 		Log.d(LOG, "Unsetting Pin " + switchID);
-		pin[switchID].write(true);
+		digitalOutputPin[switchID].write(true);
 	}
 
-	@Override
-	protected void setup() throws ConnectionLostException {
-		Log.d(LOG, "IOIO Setup");
-		for (int i = 0; i < pin.length; i++) {
-			pin[i] = ioio_.openDigitalOutput(ioioPinID[i],
-					DigitalOutput.Spec.Mode.OPEN_DRAIN, true);
-			pinStopTime[i] = 0;
+	public void resetAllPins() {
+		try {
+			for (int i = 0; i < digitalOutputPin.length; i++) {
+				digitalOutputPin[i].write(true);
+				pinStopTime[i] = 0;
+			}
+		} catch (ConnectionLostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			Log.e(LOG, e.getMessage());
 		}
-		connected = true;
 	}
 
 	protected void processPinStopEvents() throws ConnectionLostException {
 		long currSec = System.currentTimeMillis();
-		for (int i = 0; i < pin.length; i++) {
+		for (int i = 0; i < digitalOutputPin.length; i++) {
 			if (pinStopTime[i] > 0 && currSec > pinStopTime[i]) {
 				pinStopTime[i] = 0;
 				unsetPin(i);
@@ -117,75 +185,5 @@ public class KeypadIOIOLooper extends BaseIOIOLooper implements MqttCallback {
 		}
 	}
 
-	private void SetupMQTT_Reciever(Context c) {
-		parent = c;
-		try {
-			persist = new MqttDefaultFilePersistence("/sdcard/persist");
-			client = getNewClient();
-			MqttMessage message = new MqttMessage("Starting".getBytes());
-			message.setQos(0);
-			client.getTopic("keypad").publish(message);
-			// client.disconnect();
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public MqttClient getNewClient() {
-		MqttClient client = null;
-		try {
-			client = new MqttClient("tcp://192.168.1.31:1883",
-					"KeypadUnlockListener", persist);
-			client.connect();
-			client.subscribe("toDoorUnlocker/#");
-			client.setCallback(this);
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			Log.e(LOG, e.getMessage());
-		}
-		return client;
-	}
-
-	@Override
-	public void connectionLost(Throwable cause) {
-		// TODO Auto-generated method stub
-		Log.i(LOG, "lost MQTT Connection; renewing ");
-		client = getNewClient();
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-		}
-
-	}
-
-	@Override
-	public void messageArrived(MqttTopic topic, MqttMessage message)
-			throws Exception {
-		Log.i(LOG, "Topic:" + topic + ", Message: " + message);
-		if (topic.toString().equals("toDoorUnlocker")
-				&& message.toString().equals("doorUnlock")) {
-			unlock();
-			mMediaPlayer = MediaPlayer.create(parent, R.raw.beep);
-			mMediaPlayer.start();
-			while (mMediaPlayer.isPlaying()) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-				}
-			}
-			mMediaPlayer.release();
-		}
-		/*
-		 * if (topic.toString().equals("toDoorBell/reboot")) {
-		 * Rebooter.reboot(parent); }
-		 */
-	}
-
-	@Override
-	public void deliveryComplete(MqttDeliveryToken token) {
-		// TODO Auto-generated method stub
-
-	}
+	
 }

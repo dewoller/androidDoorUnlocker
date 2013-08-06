@@ -40,9 +40,10 @@
         <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="\u2190" android:id="@+id/ButtonBS"/>
         <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="0" android:id="@+id/Button0"/>
         <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text='\u21B5' android:id="@+id/ButtonSend"/>
+        <VideoView android:id="@+id/TinyVideoView" android:layout_width="1px" android:layout_height="1px" />
       </TableRow>
+        </TableLayout>
 
-    </TableLayout>
   </ScrollView>
 </LinearLayout>
  

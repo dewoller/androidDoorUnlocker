@@ -25,7 +25,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ca.wollersheim.dennis.keypad" >
 
-    <uses-sdk android:minSdkVersion="3" />
+    <uses-sdk android:minSdkVersion="5" />
     <!--
          This package contains an application...  The 'label' is the name
          to display to the user for the overall application, and provides
@@ -41,6 +41,12 @@
     <uses-permission android:name="android.permission.REBOOT" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
     <application android:label="@string/keypad" >
         <activity android:name="ca.wollersheim.dennis.keypad.KeypadActivity" >
@@ -48,13 +54,10 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-<!--    <category android:name="android.intent.category.HOME" />  -->
+                <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        
-		<service android:enabled="true" android:name="ca.wollersheim.dennis.keypad.HelloIOIOService" />
-        
     </application>
 
 </manifest>
