@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="wrap_content" android:layout_height="wrap_content">
+  <ScrollView android:id="@+id/ScrollView01" android:layout_width="wrap_content" android:layout_height="wrap_content">
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/TableLayout01" android:layout_height="wrap_content" android:layout_width="wrap_content" android:stretchColumns="0,1,2" android:isScrollContainer="true">
+
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <Button
+                android:id="@+id/ButtonReadout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_span="3" 
+                android:text=" "
+                android:textColor="@color/white1"  
+                android:gravity="left"
+                style="@style/ButtonFont" 
+                android:background="@drawable/readout" />
+
+        </TableRow> 
+
+      <TableRow android:id="@+id/TableRow01" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="1" android:id="@+id/Button1"/>
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="2" android:id="@+id/Button2"/>
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="3" android:id="@+id/Button3"/>
+      </TableRow>
+      <TableRow android:layout_width="100dp" android:layout_height="100dp" android:id="@+id/TableRow02">
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="4" android:id="@+id/Button4"/>
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="5" android:id="@+id/Button5"/>
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="6" android:id="@+id/Button6"/>
+      </TableRow>
+      <TableRow android:layout_width="100dp" android:layout_height="100dp" android:id="@+id/TableRow03">
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="7" android:id="@+id/Button7"/>
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="8" android:id="@+id/Button8"/>
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="9" android:id="@+id/Button9"/>
+      </TableRow>
+      <TableRow android:layout_width="100dp" android:layout_height="100dp" android:id="@+id/TableRow04">
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="\u2190" android:id="@+id/ButtonBS"/>
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text="0" android:id="@+id/Button0"/>
+        <Button android:background="@drawable/buttoncolor" style="@style/ButtonFont" android:layout_width="100dp" android:layout_height="100dp" android:text='\u21B5' android:id="@+id/ButtonSend"/>
+      </TableRow>
+
+    </TableLayout>
+  </ScrollView>
+</LinearLayout>
+ 
