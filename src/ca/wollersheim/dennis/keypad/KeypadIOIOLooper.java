@@ -6,7 +6,6 @@ import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import android.content.Context;
-import android.media.MediaPlayer;
 import android.util.Log;
 
 /**
@@ -15,7 +14,7 @@ import android.util.Log;
  * notification bar, enabling the user to stop the service.
  */
 public class KeypadIOIOLooper extends BaseIOIOLooper {
-	Context parent;
+	private static KeypadIOIOLooper instance = null;
 	private int[] temperaturePinID = {37,36,34,33 };
 	private double[] tempMult = {1.0, 1.0, 1.0, 1.0};
 	private int[] digitalOutputPinID = { 23, 22, 21, 20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
@@ -26,15 +25,27 @@ public class KeypadIOIOLooper extends BaseIOIOLooper {
 	private int lockIndex = 0;
 	private boolean connected = false;
 	public Exception IOIOError;
+	private MQTT_Sender sender;
+
 
 //	public enum IOIOError {
 //		NONE, DISCONNECTED, INVALIDPIN, NEVERCONNECTED
 //	};
 
-	private final String LOG = "KeypadIOIOLooper";
+	private final String LOG = "KeypadActivity";
 
-	public KeypadIOIOLooper(Context c) {
+	public KeypadIOIOLooper() {
 		super();
+		// create comm classes
+		sender = new MQTT_Sender();
+		sender.SendCommand("Starting IOIOLooper");
+	}
+	
+	public static KeypadIOIOLooper getInstance() {
+		if (instance == null ) {
+			instance = new KeypadIOIOLooper();
+		}
+		return instance;
 	}
 
 	@Override
@@ -146,7 +157,8 @@ public class KeypadIOIOLooper extends BaseIOIOLooper {
 	public void resetAllPins() {
 		try {
 			for (int i = 0; i < digitalOutputPin.length; i++) {
-				digitalOutputPin[i].write(true);
+				if ( digitalOutputPin[i]!= null)
+					digitalOutputPin[i].write(true) ;
 				pinStopTime[i] = 0;
 			}
 		} catch (ConnectionLostException e) {
@@ -164,6 +176,18 @@ public class KeypadIOIOLooper extends BaseIOIOLooper {
 				unsetPin(i);
 			}
 		}
+	}
+	
+	protected void water(int pin, int wateringDuration) {
+			try {
+				safeSetPin(pin, wateringDuration);
+			} catch (IOIOError e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		Log.d(LOG, "SetPin " + pin + ", duration " + wateringDuration);
+		sender.SendCommand("Tried to started watering for " + wateringDuration
+				+ " seconds");
 	}
 
 	/**
@@ -184,6 +208,7 @@ public class KeypadIOIOLooper extends BaseIOIOLooper {
 		} catch (InterruptedException e) {
 		}
 	}
+	
 
 	
 }

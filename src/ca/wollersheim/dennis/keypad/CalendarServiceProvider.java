@@ -9,7 +9,7 @@ import android.util.Log;
 
 @TargetApi(4)
 public class CalendarServiceProvider {
-	private final String LOG = "Calendar Query";
+	private final String LOG = "KeypadActivity";
 	private final String calendarID = "2";
 	private Context mContext;
 

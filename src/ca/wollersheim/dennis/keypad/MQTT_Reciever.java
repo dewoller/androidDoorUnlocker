@@ -1,13 +1,14 @@
 package ca.wollersheim.dennis.keypad;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
-import org.eclipse.paho.client.mqttv3.MqttDefaultFilePersistence;
 import org.eclipse.paho.client.mqttv3.MqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -23,7 +24,7 @@ public class MQTT_Reciever implements MqttCallback {
 	public MQTT_Reciever(Context c) {
 		parent = c;
 		try {
-			persist = new MqttDefaultFilePersistence("/sdcard/persist");
+			persist = new MemoryPersistence();
 			client = getNewClient();
 			MqttMessage message = new MqttMessage("Starting".getBytes());
 			message.setQos(0);
@@ -58,7 +59,6 @@ public class MQTT_Reciever implements MqttCallback {
 
 	}
 
-	@Override
 	public void messageArrived(MqttTopic topic, MqttMessage message)
 			throws Exception {
 		Log.i(LOG, "Topic:" + topic + ", Message: " + message);
@@ -74,10 +74,23 @@ public class MQTT_Reciever implements MqttCallback {
 */
 	}
 
-	@Override
+
 	public void deliveryComplete(MqttDeliveryToken token) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void messageArrived(String topic, MqttMessage message)
+			throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deliveryComplete(IMqttDeliveryToken token) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

@@ -17,30 +17,23 @@
 package ca.wollersheim.dennis.keypad;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
+
 import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
-import org.eclipse.paho.client.mqttv3.MqttDefaultFilePersistence;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import android.util.Log;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
+import android.util.Log;
 
 /** Class that handles network communication **/
 public class MQTT_Sender {
 	MqttClient client;
 	private static final String keypadTopic = "keypad";
-	private static final String LOG="MQTT_Sender";
+	private static final String LOG = "KeypadActivity";
 
 	/** Parent activity is used to get context */
 	public MQTT_Sender() {
-		try {
-			MqttClientPersistence persist = new MqttDefaultFilePersistence(
-					"/sdcard/persist");
-			client = new MqttClient("tcp://192.168.1.31:1883", "Keypad",
-					persist);
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 	}
 
@@ -49,7 +42,7 @@ public class MQTT_Sender {
 	 * broken first
 	 **/
 	public void Connect() {
-
+ 
 	}
 
 	/** Closes the socket if it exists and it is already connected **/
@@ -60,12 +53,17 @@ public class MQTT_Sender {
 	public void SendCommand(String cmd) {
 		// send command data
 		try {
+			Log.i(LOG, "Sending MQTT string " + cmd);
+
+			MqttClientPersistence persist = new MqttDefaultFilePersistence("/sdcard/temp");
+			client = new MqttClient("tcp://192.168.1.31:1883", "Keypad", persist);
 			client.connect();
 			MqttMessage message = new MqttMessage(cmd.getBytes());
 			message.setQos(0);
 			client.getTopic(keypadTopic).publish(message);
 			client.disconnect();
 		} catch (MqttException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 			Log.e(LOG, e.getMessage());
 		}

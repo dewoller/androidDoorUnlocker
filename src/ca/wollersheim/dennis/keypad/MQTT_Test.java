@@ -17,11 +17,13 @@ import java.io.IOException;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttDefaultFilePersistence;
+
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 
 /**
@@ -81,7 +83,7 @@ public class MQTT_Test implements MqttCallback {
     	//..a real application ought to store them somewhere 
     	//where they are not likely to get deleted or tampered with
     	String tmpDir = System.getProperty("java.io.tmpdir");
-    	MqttDefaultFilePersistence dataStore = new MqttDefaultFilePersistence(tmpDir); 
+    	MemoryPersistence dataStore = new MemoryPersistence(); 
     	
     	try {
     		// Construct the object that contains connection parameters 
@@ -243,5 +245,19 @@ public class MQTT_Test implements MqttCallback {
             "messages until <enter> is pressed.\n\n"
             );
     }
+
+
+	@Override
+	public void messageArrived(String topic, MqttMessage message)
+			throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deliveryComplete(IMqttDeliveryToken token) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
